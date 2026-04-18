@@ -7,20 +7,24 @@ import google.generativeai as genai
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# .env faylini yuklash
+# Environment variables yuklash
 load_dotenv()
 
 app = FastAPI(title="CyberZone Pro Platform")
 
-# Statik yo'llarni belgilash
+# Fayl yo'llarini Render uchun to'g'rilash
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-static_dir = os.path.join(BASE_DIR, "static")
+static_path = os.path.join(BASE_DIR, "static")
 
-# CSS, JS va Rasmlar uchun statik ulanish
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# Papka mavjudligini tekshirish (Xatolikni oldini olish uchun)
+if not os.path.exists(static_path):
+    os.makedirs(static_path)
+    os.makedirs(os.path.join(static_path, "css"))
+    os.makedirs(os.path.join(static_path, "js"))
 
-# HTML shablonlari uchun Jinja2
-templates = Jinja2Templates(directory=static_dir)
+# Statik va shablonlar ulanishi
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+templates = Jinja2Templates(directory=static_path)
 
 # Gemini AI sozlamalari
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -32,31 +36,15 @@ class ChatRequest(BaseModel):
     lang: str = "uz"
     module: str = "general"
 
-# O'quv kontenti (Buni kengaytirishingiz mumkin)
+# O'quv bazasi
 CYBER_CONTENT = {
-    "kirish": {
-        "uz": {
-            "title": "Kiberxavfsizlik asoslari",
-            "theory": "Kiberxavfsizlik — bu raqamli aktivlarni himoya qilish.",
-            "video": "https://www.youtube.com/embed/z5nc9MDbvEk"
-        },
-        "en": {
-            "title": "Cybersecurity Fundamentals",
-            "theory": "Cybersecurity is the protection of digital assets.",
-            "video": "https://www.youtube.com/embed/inWWhr5tnEA"
-        }
+    "kiberetika": {
+        "uz": {"title": "Kiberetika", "theory": "Hakerlikning axloqiy me'yorlari...", "video": "https://www.youtube.com/embed/example1"},
+        "en": {"title": "Cyber Ethics", "theory": "Ethical standards of hacking...", "video": "https://www.youtube.com/embed/example2"}
     },
-    "kripto": {
-        "uz": {
-            "title": "Kriptografiya",
-            "theory": "Ma'lumotlarni shifrlash va himoyalash usullari.",
-            "video": "https://www.youtube.com/embed/8v6L0X-p_u4"
-        },
-        "en": {
-            "title": "Cryptography",
-            "theory": "Methods of encrypting and securing data.",
-            "video": "https://www.youtube.com/embed/NuyzuNBFWbc"
-        }
+    "kibertahlil": {
+        "uz": {"title": "Kibertahlil", "theory": "Tahdidlarni aniqlash va tahlil qilish...", "video": "https://www.youtube.com/embed/example3"},
+        "en": {"title": "Cyber Analysis", "theory": "Threat detection and analysis...", "video": "https://www.youtube.com/embed/example4"}
     }
 }
 
@@ -74,9 +62,8 @@ async def get_module(name: str, lang: str = "uz"):
 @app.post("/ask")
 async def ask_ai(request: ChatRequest):
     try:
-        instruction = f"Sen kiberxavfsizlik mentorsan. Javob tili: {request.lang}. Mavzu: {request.module}."
-        full_prompt = f"{instruction}\nSavol: {request.message}"
-        response = model.generate_content(full_prompt)
+        prompt = f"Sen kiberxavfsizlik mentorsan. Til: {request.lang}. Mavzu: {request.module}. Savol: {request.message}"
+        response = model.generate_content(prompt)
         return {"answer": response.text}
     except Exception as e:
         return JSONResponse(status_code=500, content={"answer": f"Xato: {str(e)}"})
