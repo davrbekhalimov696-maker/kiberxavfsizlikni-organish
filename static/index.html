@@ -2,25 +2,35 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>CyberZone Pro</title>
+    <title>CyberAcademy - O'rganish Markazi</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="sidebar">
-        <h2>CYBER ZONE</h2>
-        <button onclick="loadModule('kirish')">Kirish</button>
-        <button onclick="loadModule('kripto')">Kriptografiya</button>
+        <h2>Cyber Academy</h2>
+        <hr>
+        <button class="nav-btn" onclick="loadLesson('linux')">1. Linux Asoslari</button>
+        <button class="nav-btn" onclick="loadLesson('nmap')">2. Nmap Skanerlash</button>
+        <button class="nav-btn" onclick="loadLesson('metasploit')">3. Metasploit Pro</button>
     </div>
 
-    <div class="main-content">
-        <h1 id="module-title">Modulni tanlang</h1>
-        <iframe id="video-frame" class="video-player" src="" frameborder="0" allowfullscreen></iframe>
-        <div id="theory-text">Nazariya qismi...</div>
+    <div class="main">
+        <div id="welcome-msg">
+            <h1>Salom, Davrbek!</h1>
+            <p>O'rganmoqchi bo'lgan bo'limingizni tanlang.</p>
+        </div>
 
-        <div class="terminal-box">
-            <div id="ai-response">Mentor: Savol bering...</div>
-            <input type="text" id="user-input" onkeypress="if(event.key==='Enter') askMentor()">
+        <div id="lesson-content" style="display:none;">
+            <h1 id="lesson-title"></h1>
+            <p id="lesson-desc"></p>
+
+            <div class="code-box">
+                <div class="code-header">
+                    <span>Terminal / Code</span>
+                    <button class="copy-btn" onclick="copyCode()">Nusxa olish</button>
+                </div>
+                <pre><code id="code-text"></code></pre>
+            </div>
         </div>
     </div>
 

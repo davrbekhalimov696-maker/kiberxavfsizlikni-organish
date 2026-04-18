@@ -1,27 +1,17 @@
-let currentLang = 'uz';
+async function loadLesson(name) {
+    const res = await fetch(`/api/lesson/${name}`);
+    const data = await res.json();
 
-async function setLanguage(lang) {
-    currentLang = lang;
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-    // Tugma holatini yangilash logikasi bu yerda
+    document.getElementById('welcome-msg').style.display = 'none';
+    document.getElementById('lesson-content').style.display = 'block';
+
+    document.getElementById('lesson-title').innerText = data.title;
+    document.getElementById('lesson-desc').innerText = data.desc;
+    document.getElementById('code-text').innerText = data.code;
 }
 
-async function loadModule(moduleName) {
-    const response = await fetch(`/api/module/${moduleName}?lang=${currentLang}`);
-    const data = await response.json();
-
-    document.getElementById('module-title').innerText = data.title;
-    document.getElementById('theory-text').innerText = data.theory;
-    document.getElementById('video-frame').src = data.video;
-}
-
-async function askMentor() {
-    const input = document.getElementById('user-input').value;
-    const response = await fetch('/ask', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ message: input, lang: currentLang })
-    });
-    const result = await response.json();
-    document.getElementById('ai-response').innerText = result.answer;
+function copyCode() {
+    const text = document.getElementById('code-text').innerText;
+    navigator.clipboard.writeText(text);
+    alert("Kod nusxalandi! Endi uni terminalga qo'yishingiz mumkin.");
 }

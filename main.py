@@ -1,48 +1,47 @@
 import os
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import google.generativeai as genai
-from pydantic import BaseModel
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = FastAPI()
 
-# Yo'llarni dinamik aniqlash
+# Yo'llarni aniq belgilash (Xatolikni tuzatish)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(BASE_DIR, "static")
 
-# Papka mavjudligini tekshirish, agar yo'q bo'lsa xato bermasligi uchun
-if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_path), name="static")
-    templates = Jinja2Templates(directory=static_path)
-else:
-    # Agar static papkasi topilmasa, asosiy direktoriya bilan ishlashga urinish
-    templates = Jinja2Templates(directory=BASE_DIR)
+# Statik ulanish
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=static_dir)
 
-# Gemini AI (404 xatosini oldini olish uchun barqaror model)
-API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-class ChatRequest(BaseModel):
-    message: str
-    lang: str = "uz"
+# O'quv darslari bazasi
+DATABASE = {
+    "linux": {
+        "title": "Linux Terminali",
+        "desc": "Kiberxavfsizlikda terminal bilan ishlash eng asosiy ko'nikmadir. Quyida eng ko'p ishlatiladigan buyruqlar keltirilgan.",
+        "image": "/static/images/linux.png",
+        "code": "# Fayllarni ko'rish\nls -la\n\n# Papka yaratish\nmkdir cyber_lab\n\n# Huquqlarni o'zgartirish\nchmod +x script.sh"
+    },
+    "nmap": {
+        "title": "Nmap: Tarmoq Skanerlash",
+        "desc": "Nmap yordamida ochiq portlarni va xizmatlarni aniqlash mumkin. Bu razvedka bosqichining asosi hisoblanadi.",
+        "image": "/static/images/nmap.png",
+        "code": "# Oddiy skanerlash\nnmap 192.168.1.1\n\n# Xizmatlar versiyasini aniqlash\nnmap -sV target.com\n\n# Barcha portlarni tekshirish\nnmap -p- 10.10.10.1"
+    },
+    "metasploit": {
+        "title": "Metasploit Framework",
+        "desc": "Eksploitlar bilan ishlash uchun eng mashhur platforma. Unda minglab tayyor zaifliklar mavjud.",
+        "image": "/static/images/msf.png",
+        "code": "# Konsolni ishga tushirish\nmsfconsole\n\n# Eksploit qidirish\nsearch eternalblue\n\n# Eksploitni tanlash\nuse exploit/windows/smb/ms17_010_eternalblue"
+    }
+}
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    try:
-        return templates.TemplateResponse("index.html", {"request": request})
-    except Exception:
-        return HTMLResponse("index.html topilmadi. Iltimos, fayl joylashuvini tekshiring.")
+    return templates.TemplateResponse("index.html", {"request": request})
 
-@app.post("/ask")
-async def ask_ai(request: ChatRequest):
-    try:
-        response = model.generate_content(request.message)
-        return {"answer": response.text}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"answer": f"Xato: {str(e)}"})
+@app.get("/api/lesson/{name}")
+async def get_lesson(name: str):
+    if name not in DATABASE:
+        raise HTTPException(status_code=404)
+    return DATABASE[name]
